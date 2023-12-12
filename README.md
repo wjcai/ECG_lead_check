@@ -14,7 +14,7 @@ numpy==1.17.0
 6. chest.ILC_model: build ILC model
 7. chest.train_model_chest: train and evaluate the ILC model
 
-An example of prediction can be found in prediciton_example.py
+An example of prediction can be found in prediciton_example.py. Detailed usage for prediction is displayed in limb_leads_misplacement.ipynb and chest_leads_misplacement.ipynb. 
 Samples are chosen from PTBXL, with the shape of (10,5000,12). Noise reduction, downsampling and Z-score normalization are carried out successively.
 The input shape of LDenseNet is (N, 1200, 3), where 3 presents Ⅲ, avR, and V6. The input shape of ILC is (N, 1200, 6), where 6 presents 6 chest leads.
 Model's weights are saved at 'saved_model' floder.
