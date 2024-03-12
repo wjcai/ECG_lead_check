@@ -14,7 +14,14 @@ numpy==1.17.0
 6. chest.ILC_model: build ILC model
 7. chest.train_model_chest: train and evaluate the ILC model
 
-An example of prediction can be found in prediciton_example.py. Detailed usage for prediction is displayed in limb_leads_misplacement.ipynb and chest_leads_misplacement.ipynb. 
-Samples are chosen from PTBXL, with the shape of (10,5000,12). Noise reduction, downsampling and Z-score normalization are carried out successively.
-The input shape of LDenseNet is (N, 1200, 3), where 3 presents Ⅲ, avR, and V6. The input shape of ILC is (N, 1200, 6), where 6 presents 6 chest leads.
+
+limb_lead_misplacement_colab.ipynb and chest_lead_misplacement_colab.ipynb are illustrative examples, including the whole process of lead misplacement detection 
+(load data, data preprocess, misplacement simulation, and model prediction). Noise reduction, downsampling and Z-score normalization are carried out successively. 
+The input shape of LDenseNet is (N, 1200, 3), where 3 presents Ⅲ, avR, and V6. The input shape of ILC is (N, 1200, 6), where 6 presents 6 chest leads. 
 Model's weights are saved at 'saved_model' floder.
+
+A file in example folder is a small dataset chosen from PTBXL database without any data preprocess, which is a numpy array with the shape of (10, 5000, 12). The sample rate is 500Hz. 
+
+Examples can be open and run in Colab through the following links.
+https://colab.research.google.com/github/wjcai/ECG_lead_check/blob/main/limb_lead_misplacement_colab.ipynb
+https://colab.research.google.com/github/wjcai/ECG_lead_check/blob/main/chest_lead_misplacement_colab.ipynb
