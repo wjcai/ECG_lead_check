@@ -1,5 +1,10 @@
 
 # -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 19 09:09:50 2022
+
+@author: nyapass
+"""
 
 import wfdb
 import numpy as np
@@ -7,19 +12,46 @@ import matplotlib.pyplot as plt
 from scipy import signal
 import neurokit2 as nk
 
+# Z-score normalization
 def ZscoreNormalization(x):
+    '''
+    x: input signal, numpy array with shape (length,)
+    '''
     if np.std(x)!=0:
         x = (x - np.mean(x)) / np.std(x)
     else:
         x = np.zeros_like(x)
     return x
 
-
+# butterworth bandpass filter
 def bandpass(x):
+    '''
+    x: input signal, numpy array with shape (length,)
+    '''
     y = nk.signal_filter(x, sampling_rate=1000, lowcut=0.5, highcut=35, order=5)
     return y
 
+#split the length-varied signal
+def split_signal(signal_c_120):
+    '''
+    signal_c_120: preprocessed record, numpy array with shape (12, length)
+    '''
+    signal_c_120 = np.transpose(signal_c_120, [1,0])
+    start = 0
+    all_sample=[]
+    signal_lens = int(10*120)
+    while start+signal_lens <= signal_c_120.shape[0]:
+        sample = signal_c_120[start:start+signal_lens]
+        all_sample.append(sample)
+        start+=signal_lens
+    #all_sample = np.array(all_sample)
+    return all_sample
+
+# load data and preprocess
 def load_raw_data(path):
+    '''
+    path: path of data, string
+    '''
     all_data=[]
     for line in open(path+"RECORDS_e"): #exclude 5 recording manually
         data = wfdb.rdrecord(path + line[:-1])
@@ -46,17 +78,7 @@ def load_raw_data(path):
     return all_data
 
 
-def split_signal(signal_c_120):
-    signal_c_120 = np.transpose(signal_c_120, [1,0])
-    start = 0
-    all_sample=[]
-    signal_lens = int(10*120)
-    while start+signal_lens <= signal_c_120.shape[0]:
-        sample = signal_c_120[start:start+signal_lens]
-        all_sample.append(sample)
-        start+=signal_lens
-    #all_sample = np.array(all_sample)
-    return all_sample
+
 
 
     

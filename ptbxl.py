@@ -3,7 +3,13 @@ import numpy as np
 import wfdb
 import ast
 
+#load raw data
 def load_raw_data(df, sampling_rate, path):
+    '''
+    df: dataframe of ptbxl
+    sampling_rate: choose the samle rate of signal, 100 or 500
+    path: root_path of data
+    '''
     if sampling_rate == 100:
         data = [wfdb.rdsamp(path+f) for f in df.filename_lr]
     else:

@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Sat Sep  9 18:35:29 2023
 
+@author: nyapass
+"""
 import tensorflow as tf
 
-
+# compute the correlation coefficient between two feature maps
 def compute_cof(x,y):
+    '''
+    x,y: two feature map with the same shape, tensor
+    '''
     x = tf.keras.layers.Flatten()(x)
     y = tf.keras.layers.Flatten()(y)
     fz = tf.reduce_sum(x*y, axis=-1)
@@ -11,11 +18,24 @@ def compute_cof(x,y):
     return fz/fm
 
 def Conv_1D_Block(x, kernel_num, kernel_size, strides):
+    '''
+    N: sample number
+    L: feature length
+    C: channel number
+    x: input tensor, (N, L, C)
+    model_width: filter number of convolution layer, int
+    kernel: kernel length of convolution layer, int
+    strides: stride of convolution layer, int
+    '''
     x = tf.keras.layers.Conv1D(kernel_num, kernel_size, strides=strides, padding="same")(x) #kernel_initializer="he_normal")(x)
     x = tf.keras.layers.Activation('swish')(x)
     return x
-  
+
+# define correlation coefficient layer
 def cof_layer(fms):
+    '''
+    fms: feature map list
+    '''
     cof_list = []
     for i in range(len(fms)-1):
         #cof_sample = []
@@ -25,7 +45,13 @@ def cof_layer(fms):
             cof_list.append(cof)
     return cof_list
 
+
 def stem(inputs, num_filters, filter_len):
+    '''
+    inputs: input tensor, (sample number, signal length, channel number)
+    num_filters: filter number of convolution layer, int
+    filter_len: kernel length of convolution layer, int
+    '''
     conv = Conv_1D_Block(inputs, num_filters, filter_len, 2)
     if conv.shape[1] <= 2:
         pool = tf.keras.layers.MaxPooling1D(pool_size=1, strides=2, padding="same")(conv)
@@ -35,6 +61,14 @@ def stem(inputs, num_filters, filter_len):
     return pool
 
 def conv_block(x, num_filters, bottleneck=True):
+    '''
+    N: sample number
+    L: feature length
+    C: channel number
+    x: input tensor, (N, L, C)
+    num_filters: filter number of convolution layer, int
+    bottleneck: whether use bottleneck filter, bool
+    '''
     if bottleneck:
         num_filters_bottleneck = num_filters * 4
         x = Conv_1D_Block(x, num_filters_bottleneck, 1, 1)
@@ -44,6 +78,15 @@ def conv_block(x, num_filters, bottleneck=True):
 
 
 def dense_block(x, num_filters, num_layers, bottleneck=True):
+    '''
+    N: sample number
+    L: feature length
+    C: channel number
+    x: input tensor, (N, L, C)
+    num_filters: filter number of convolution layer, int
+    num_layers: number of convolution layer, int
+    bottleneck: whether use bottleneck filter, bool
+    '''
     cb_list = []
     for i in range(num_layers):
         cb = conv_block(x, num_filters, bottleneck=bottleneck)
@@ -53,8 +96,7 @@ def dense_block(x, num_filters, num_layers, bottleneck=True):
 
 
  
-# denseblock share
-
+# define branch architecture
 def branch_model(inputs_shape):
     inputs = tf.keras.Input(inputs_shape)
     stem_block = stem(inputs, num_filters=16, filter_len=11)
@@ -64,8 +106,12 @@ def branch_model(inputs_shape):
     model = tf.keras.Model(inputs, conv_op_list)
     return model
 
-
+# build ILC model
 def build_model(input_shape, output_dims):
+    '''
+    input_shape: input shape of model, tuple with shape of (length, channel)
+    output_dims: number of the output categories, int
+    '''
     inputs = tf.keras.Input(input_shape)
     input_list = tf.unstack(inputs, axis=-1)
     input_list_exp = [tf.expand_dims(i, -1) for i in input_list]
@@ -105,6 +151,8 @@ def build_model(input_shape, output_dims):
 
 if __name__ == '__main__':
     
-    pass
-
+    input_shape = (1200,6)
+    output_dims = 10
+    model = build_model(input_shape, output_dims)
+    model.summary()
     

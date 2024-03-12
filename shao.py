@@ -1,17 +1,28 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Sat Nov 19 09:09:50 2022
+
+@author: nyapass
+"""
 
 import wfdb
 import pathlib
 import numpy as np
 
 
-
+# Z-score normalization
 def ZscoreNormalization(x):
+    '''
+    x: input signal, numpy array with shape (length,)
+    '''
     x = (x - np.mean(x)) / np.std(x)
     return x
 
-
+# determine whether NAN exists in the data
 def rn(leads):
+    '''
+    leads: record, numpy array with shape (12, length)
+    '''
     leads_ = np.copy(leads)
     flag=0
     leads_ = np.transpose(leads_)
@@ -23,7 +34,11 @@ def rn(leads):
                 break
     return flag
 
+# load raw data
 def load_raw_data(path):
+    '''
+    path: path of data
+    '''
     all_data=[]
     error = []
     for line in open(path+"RECORDS"):

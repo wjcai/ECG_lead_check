@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Sat May 13 14:39:56 2023
+
+@author: 10671
+"""
 
 #import os
 #os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -12,8 +17,11 @@ from sklearn.metrics import f1_score, confusion_matrix
 import matplotlib.pyplot as plt
 from data_preprocess import *
 
-
+#calculate metrics
 def cal_metrics(confusion_matrix):
+    '''
+    confusion_matrix: numpy array, (class_number, class_number)
+    '''
     n_classes = confusion_matrix.shape[0]
     metrics_result = []
     for i in range(n_classes):
@@ -30,8 +38,14 @@ def cal_metrics(confusion_matrix):
     return metrics_result
 
 
-
-def evaluater(x_test, y_test,model, path):
+# test the model
+def evaluater(x_test, y_test, model, path):
+    '''
+    x_test: numpy array, (sample number, 1200, 3)
+    y_test: numpy array, (sample number,)
+    model: trained LDenseNet model
+    path: path for result saving
+    '''
     y_pred = model.predict(x_test)
     num = y_pred.shape[-1]
     y_pred = np.argmax(y_pred, axis=1)
@@ -60,7 +74,12 @@ def evaluater(x_test, y_test,model, path):
     metrics_result = np.array(metrics_result)
     return metrics_result, acc
 
+# used when evaluate the binary classification performance
 def merge_label(labels, to_cat=True):
+    '''
+    labels: numpy array, (test sample number, )
+    to_cat: whether transfer labels to one-hot labels or not
+    '''
     new_labels = []
     for i in range(labels.shape[0]):
         if labels[i]!=0:
@@ -72,7 +91,13 @@ def merge_label(labels, to_cat=True):
         new_labels = to_categorical(new_labels, num_classes = 2)
     return new_labels
 
+# evaluate the binary classification performance
 def evaluater_binary(x_test, y_test, model):
+    '''
+    x_test: numpy array, (sample number, 1200, 3)
+    y_test: numpy array, (sample number,)
+    model: trained LDenseNet model
+    '''
     y_pred = model.predict(x_test)
     num = 2
     
@@ -96,9 +121,11 @@ def evaluater_binary(x_test, y_test, model):
     metrics_result = np.array(metrics_result)
     return metrics_result, acc
 
-
-
+# print the train and validation history
 def print_history(result_array):
+    '''
+    result_array: numpy array
+    '''
     fig = plt.figure()
     ax = plt.subplot(2,1,1)
     ax.plot(result_array[0])
@@ -114,6 +141,7 @@ def print_history(result_array):
     fig.subplots_adjust(hspace=0.4)
     plt.legend(['Train_APUC', 'Val_APUC', 'Train_loss', 'Val_loss'], loc = 'upper right')
 
+# Custom metrics for validation set monitoring
 def py_auprc(y_true, y_pred):
     y_pred = np.argmax(y_pred, axis=-1)
     y_true = np.argmax(y_true, axis=-1)
@@ -135,6 +163,23 @@ class F1S(tf.keras.metrics.Metric):
         self.score.assign(0.0)
 
 def train_model(model, x_train, y_train, x_val, y_val, x_test, y_test, save_path, EP, LR, BS, input_shape, output_dims, pic_path_ptb, pic_path_ptbxl, test = True):
+    '''
+    model: LDenseNet
+    x_train: training data, numpy array, (sample number, 1200, 3)
+    y_train: one-hot training label, numpy array, (sample number, class number)
+    x_val: validation data, numpy array, (sample number, 1200, 3)
+    y_val: one-hot validation label, numpy array, (sample number, class number)
+    x_test: test data, numpy array, (sample number, 1200, 3)
+    y_test: one-hot test label, numpy array, (sample number, class number)
+    save_path: path for model saving, string
+    EP: total epoch number, int
+    LR: initial learing rate, float
+    BS: batch size, int
+    input_shape: input shape of model, tuple with shape of (length, channel)
+    output_dims: number of the output categories, int
+    pic_path_ptb/ptbxl: path for confusion matrix saving, string
+    test: whether test model by test set, bool
+    '''
     opt=Adam(lr=LR,decay=LR/EP)
     ME = F1S()
     model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=[ME])

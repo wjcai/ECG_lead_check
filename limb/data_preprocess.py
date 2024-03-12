@@ -1,24 +1,38 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Nov 10 13:07:26 2022
+
+@author: nyapass
+"""
 
 import numpy as np
 import neurokit2 as nk
 import scipy.signal
 
-
+# butterworth bandpass filter
 def bandpass(x):
+    '''
+    x: input signal, numpy array with shape (length,)
+    '''
     y = nk.signal_filter(x, sampling_rate=500, lowcut=0.5, highcut=35, order=5)
     return y
 
-
+# Z-score normalization
 def ZscoreNormalization(x):
+    '''
+    x: input signal, numpy array with shape (length,)
+    '''
     if np.std(x)!=0:
         x = (x - np.mean(x)) / np.std(x)
     else:
         x = np.zeros_like(x)
     return x
 
-
+# preprocess one sample
 def leads_preprocessing(leads, downsample=True, denoise = True):
+    '''
+    leads: input sample, numpy array with shape (channel, length)
+    '''
     pre_lead = []
     flag=0
     for i in range(leads.shape[0]):
@@ -35,8 +49,11 @@ def leads_preprocessing(leads, downsample=True, denoise = True):
     return pre_lead, flag
 
 
-              
+# preprocess the whole datasets           
 def preprocess_data(raw_data, downsample = True, denoise = True):
+    '''
+    raw_data: dataset, numpy array with shape (sample_number, channel, length)
+    '''
     del_list = []
     if raw_data.shape[-1] < raw_data.shape[1]:
         raw_data = np.transpose(raw_data, [0,2,1])
@@ -51,22 +68,26 @@ def preprocess_data(raw_data, downsample = True, denoise = True):
     preprocessed_data = np.delete(preprocessed_data, del_list, axis=0)
     return preprocessed_data
 
-
+# simulation the limb lead misplacement situations 
 def interchange_transform(mode,normal_leads):
+    '''
+    mode: index for limb lead misplacement situations int
+    normal_leads: sample without misplacment, numpy array with shape (channel, length)
+    '''
     transformed_leads = np.copy(normal_leads)
-    if mode == 1:#LA/RA
+    if mode == 1:#LA-RA
         transformed_leads[0]=-normal_leads[0]
         transformed_leads[1]=normal_leads[2]
         transformed_leads[2]=normal_leads[1]
         transformed_leads[3]=normal_leads[4]
         transformed_leads[4]=normal_leads[3]
-    elif mode == 2:#RA/LL
+    elif mode == 2:#RA-LL
         transformed_leads[0]=-normal_leads[2]
         transformed_leads[1]=-normal_leads[1]
         transformed_leads[2]=-normal_leads[0]
         transformed_leads[3]=normal_leads[5]
         transformed_leads[5]=normal_leads[3]
-    elif mode == 3:#LA//LL
+    elif mode == 3:#LA-LL
        transformed_leads[0]=normal_leads[1]
        transformed_leads[1]=normal_leads[0]
        transformed_leads[2]=-normal_leads[2]
@@ -90,9 +111,13 @@ def interchange_transform(mode,normal_leads):
         pass
     return transformed_leads
 
-
+#generarte label according to appointed misplacement situations and rate for each class
 def make_label(all_data_num, positive_list, positive_rate):
-    
+    '''
+    all_data_num: number of all dataset, int
+    positive_list: list of appointed misplacement situations, list
+    positive_rate: list of rate for each class, list
+    '''
     labels = []
     for i in range(len(positive_rate)):
         kind_num = int(positive_rate[i]*all_data_num)
@@ -107,9 +132,12 @@ def make_label(all_data_num, positive_list, positive_rate):
     labels = labels[index]
     return labels
 
-
+#split training set and validaion set
 def train_val_split(raw_data, val_rate):
-    
+    '''
+    raw_data: dataset, numpy array with shape (sample_number, channel, length)
+    val_rate: the rate for validation set, float
+    '''
     index = np.arange(raw_data.shape[0])
     val_lens = int(raw_data.shape[0]*val_rate)
     np.random.seed(1095)
@@ -122,8 +150,16 @@ def train_val_split(raw_data, val_rate):
     val_data = raw_data[val_index]
     return train_data, val_data
 
+#prepare for the datasets
 def split_data(pre_data, val_rate, positive_list, positive_rate_test, fix = False, otherlist = [1,2,4,5]):
-   
+    '''
+    pre_data: preprocessed data, numpy array with shape (sample_number, channel, length)
+    val_rate: validation rate, float
+    positive_list: list of appointed misplacement situations, list
+    positive_rate_test: list of rate for each class in validation set and test set, list
+    fix: used when compare the binary classification performance with machine learning-based method, bool
+    otherlist: only used when fix is True. list of appointed misplacement situations, list
+    '''
     def shuffle_train_data(x,y):
         index = np.arange(x.shape[0])
         np.random.seed(1096)

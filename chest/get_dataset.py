@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Nov 10 13:07:26 2022
+
+@author: nyapass
+"""
 
 import numpy as np
 from collections import Counter
@@ -7,13 +12,19 @@ import neurokit2 as nk
 import scipy.signal
 
 
-
+# butterworth bandpass filter
 def bandpass(x):
+    '''
+    x: input signal, numpy array with shape (length,)
+    '''
     y = nk.signal_filter(x, sampling_rate=500, lowcut=0.5, highcut=35, order=5)
     return y
 
-#(length,)
+# Z-score normalization
 def ZscoreNormalization(x):
+    '''
+    x: input signal, numpy array with shape (length,)
+    '''
     if np.std(x)!=0:
         x = (x - np.mean(x)) / np.std(x)
     else:
@@ -21,8 +32,11 @@ def ZscoreNormalization(x):
     return x
 
 
-#(6,length)
+# preprocess one sample
 def leads_preprocessing(leads, downsample=True, denoise = True):
+    '''
+    leads: input sample, numpy array with shape (channel, length)
+    '''
     pre_lead = []
     for i in range(leads.shape[0]):
         lead = leads[i]
@@ -35,8 +49,12 @@ def leads_preprocessing(leads, downsample=True, denoise = True):
     pre_lead = np.array(pre_lead, dtype = 'float32')
     return pre_lead
 
-
+# simulation the limb lead misplacement situations 
 def interchange_transform(mode,normal_leads):
+    '''
+    mode: index for limb lead misplacement situations int
+    normal_leads: sample without misplacment, numpy array with shape (channel, length)
+    '''
     lead_num = normal_leads.shape[0]
     if lead_num==6:
         transformed_leads = np.copy(normal_leads)
@@ -138,8 +156,13 @@ def interchange_transform(mode,normal_leads):
             pass
     return transformed_leads
 
+#generarte label according to appointed misplacement situations and rate for each class
 def make_label(all_data_num, positive_list, positive_rate):
-    
+    '''
+    all_data_num: number of all dataset, int
+    positive_list: list of appointed misplacement situations, list
+    positive_rate: list of rate for each class, list
+    '''
     labels = []
     for i in range(len(positive_rate)):
         kind_num = int(positive_rate[i]*all_data_num)
@@ -154,9 +177,12 @@ def make_label(all_data_num, positive_list, positive_rate):
     labels = labels[index]
     return labels
 
-
+#split training set and validaion set
 def train_val_split(raw_data, val_rate):
-    
+    '''
+    raw_data: dataset, numpy array with shape (sample_number, channel, length)
+    val_rate: the rate for validation set, float
+    '''
     index = np.arange(raw_data.shape[0])
     val_lens = int(raw_data.shape[0]*val_rate)
     np.random.seed(1095)
@@ -169,8 +195,16 @@ def train_val_split(raw_data, val_rate):
     val_data = raw_data[val_index]
     return train_data, val_data
 
-def split_data(pre_data, val_rate, positive_list, positive_rate_test, fix = False, otherlist = [1,2,4,5], lead_num=6):
-   
+#prepare for the datasets
+def split_data(pre_data, val_rate, positive_list, positive_rate_test, fix = False, otherlist = [1,2,4,5]):
+    '''
+    pre_data: preprocessed data, numpy array with shape (sample_number, channel, length)
+    val_rate: validation rate, float
+    positive_list: list of appointed misplacement situations, list
+    positive_rate_test: list of rate for each class in validation set and test set, list
+    fix: used when compare the binary classification performance with machine learning-based method, bool
+    otherlist: only used when fix is True. list of appointed misplacement situations, list
+    '''
     def shuffle_train_data(x,y):
         index = np.arange(x.shape[0])
         np.random.seed(1096)
@@ -225,13 +259,13 @@ def split_data(pre_data, val_rate, positive_list, positive_rate_test, fix = Fals
     x_train = []
     for j in range(extend_train_data.shape[0]):
         mode = extend_train_label[j]
-        t_leads = interchange_transform(mode, extend_train_data[j], lead_num)
+        t_leads = interchange_transform(mode, extend_train_data[j])
         x_train.append(t_leads)
         
     x_val = []
     for k in range(val_data.shape[0]):
         mode = val_labels[k]
-        t_leads = interchange_transform(mode, val_data[k], lead_num)
+        t_leads = interchange_transform(mode, val_data[k])
         x_val.append(t_leads)
           
     x_train = np.array(x_train, dtype = 'float32')
@@ -243,6 +277,9 @@ def split_data(pre_data, val_rate, positive_list, positive_rate_test, fix = Fals
 
                     
 def preprocess_data(raw_data, downsample = True, denoise = True):
+    '''
+    raw_data: dataset, numpy array with shape (sample_number, channel, length)
+    '''
     if raw_data.shape[-1] < raw_data.shape[1]:
         raw_data = np.transpose(raw_data, [0,2,1])
     preprocessed_data = []
