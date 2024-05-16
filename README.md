@@ -25,3 +25,6 @@ A file in example folder is a small dataset chosen from PTBXL database without a
 Examples can be open and run in Colab through the following links.
 https://colab.research.google.com/github/wjcai/ECG_lead_check/blob/main/limb_lead_misplacement_colab.ipynb
 https://colab.research.google.com/github/wjcai/ECG_lead_check/blob/main/chest_lead_misplacement_colab.ipynb
+
+If you think this algorithm is helpful, please cite this paper as a reference:
+Huang, Y., Wang, M., Li, Y.G. and Cai, W., 2024. A lightweight deep learning approach for detecting electrocardiographic lead misplacement. Physiological Measurement. https://doi.org/10.1088/1361-6579/ad43ae
